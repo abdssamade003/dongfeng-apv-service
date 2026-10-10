@@ -13,6 +13,7 @@ import {
   VIN_MODEL_CATALOG_IDS,
   type VinModelName,
 } from "../data/vinModels";
+import { scanVin as readVinFromImage } from "../utils/vinOcr";
 import type { SelectedVehicle } from "../types";
 
 interface Props {
@@ -25,29 +26,6 @@ interface Props {
 
 const EXAMPLE_VIN = "LGDTE31C6SA603024";
 const VIN_RE = /^[A-HJ-NPR-Z0-9]{17}$/;
-
-function extractVinFromText(text: string): string | null {
-  const rawLines = text.toUpperCase().split(/\r?\n/);
-  const cleanLine = (line: string) => line.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^A-Z0-9]/g, "");
-  const lines = rawLines.map(cleanLine);
-  const findCandidates = (value: string) => {
-    if (value.length < 17) return [];
-    return Array.from(
-      { length: value.length - 16 },
-      (_, index) => value.slice(index, index + 17),
-    ).filter((candidate) => VIN_RE.test(candidate));
-  };
-  const chassisCandidates = rawLines.flatMap((line, index) => {
-    const normalizedLine = cleanLine(line);
-    const label = /(?:(?:NUMERO|NO|N)?(?:DU|DE)?CHASSIS|VIN)/.exec(normalizedLine);
-    if (!label) return [];
-    const valueAfterLabel = normalizedLine.slice(label.index + label[0].length);
-    const followingLines = lines.slice(index + 1, index + 3);
-    return findCandidates([valueAfterLabel, ...followingLines].join(""));
-  });
-
-  return chassisCandidates[0] ?? null;
-}
 
 export default function VehicleScreen({ initial, onBack, onSubmit, onNotify, onVinDetection }: Props) {
   const start = initial ?? defaultVehicle;
@@ -150,18 +128,9 @@ export default function VehicleScreen({ initial, onBack, onSubmit, onNotify, onV
     setError("");
     setScanning(true);
     try {
-      const { createWorker } = await import("tesseract.js");
-      const worker = await createWorker("eng");
-      let text: string;
-      try {
-        ({ data: { text } } = await worker.recognize(image));
-      } finally {
-        await worker.terminate();
-      }
-
-      const scannedVin = extractVinFromText(text);
+      const scannedVin = await readVinFromImage(image);
       if (!scannedVin) {
-        setError("N° du châssis introuvable. Cadrez clairement son libellé et ses 17 caractères.");
+        setError("VIN non détecté. Veuillez prendre une photo plus nette.");
         return;
       }
       setVin(scannedVin);
@@ -259,9 +228,8 @@ export default function VehicleScreen({ initial, onBack, onSubmit, onNotify, onV
                 className="mt-3 flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-brand font-semibold text-brand transition hover:bg-brand-soft active:scale-[0.99] disabled:cursor-wait disabled:opacity-60"
               >
                 <ScanLine aria-hidden="true" className="h-5 w-5 text-brand" strokeWidth={2} />
-                {scanning ? "Lecture du N° du châssis en cours…" : "Scanner le N° du châssis"}
+                {scanning ? "Analyse en cours..." : "Scanner le N° du châssis"}
               </button>
-              {scanning && <p className="mt-2 text-center text-xs text-muted" role="status">La photo est analysée sur cet appareil.</p>}
               <div className="mt-1.5 flex items-start justify-between gap-2 text-xs">
                 {error ? (
                   <p className="flex items-start gap-1 font-medium text-brand" role="alert"><AlertCircle className="mt-px h-3.5 w-3.5 shrink-0" />{error}</p>
