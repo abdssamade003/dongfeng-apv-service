@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Camera, Loader2, ScanLine, SearchX, X } from "lucide-react";
 import Header from "../components/Header";
-import VehicleCard from "../components/VehicleCard";
 import CategoryCard from "../components/CategoryCard";
 import ProductCard from "../components/ProductCard";
 import PrimaryButton from "../components/PrimaryButton";
@@ -119,9 +118,51 @@ export default function PartsScreen({
     <div className="screen-page no-scrollbar flex h-full flex-col overflow-y-auto bg-white">
       <Header onBack={onBack} onNotify={onNotify} />
 
-      <main className="mx-auto w-full max-w-[1180px] px-5 pb-8 pt-3 lg:px-8 lg:pt-6">
+      <main className="mx-auto w-full max-w-[1180px] px-4 pb-8 pt-4 sm:px-5 lg:px-8 lg:pt-5">
+        <div className="flex h-14 items-center gap-2 rounded-2xl border border-line bg-surface px-4 transition focus-within:border-brand focus-within:bg-white focus-within:ring-4 focus-within:ring-brand/10">
+          <input
+            type="search"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Rechercher une pièce…"
+            aria-label="Rechercher une pièce"
+            className="h-full min-w-0 flex-1 bg-transparent text-base outline-none placeholder:text-muted [&::-webkit-search-cancel-button]:hidden"
+          />
+          {query && <button type="button" aria-label="Effacer" onClick={() => setQuery("")} className="text-muted"><X className="h-4 w-4" /></button>}
+          <button type="button" aria-label="Scanner une pièce" onClick={startScan} className="flex h-9 w-9 items-center justify-center rounded-lg text-ink transition hover:bg-line/60 active:scale-90"><ScanLine className="h-5 w-5" /></button>
+        </div>
+
+        <section aria-label={`Véhicule sélectionné : ${vehicle.name}`} className="relative mt-4 h-[230px] overflow-hidden rounded-2xl bg-ink shadow-sm sm:h-[300px] lg:h-[360px]">
+          <img src="/parts-warehouse.png" alt="" className="absolute inset-0 h-full w-full object-cover" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/5 to-black/10" />
+          <div className="absolute inset-x-0 bottom-0 grid min-h-[96px] grid-cols-[36%_minmax(0,1fr)_auto] items-center gap-2 px-3 py-2 sm:min-h-[108px] sm:px-5 sm:py-3">
+            <img
+              src={vehicle.image}
+              alt=""
+              className="absolute -bottom-2 left-1 h-[125px] w-[36%] object-contain drop-shadow-[0_8px_10px_rgba(0,0,0,0.3)] sm:left-3 sm:h-[150px] sm:w-[36%] lg:h-[180px]"
+            />
+            <div className="col-start-2 min-w-0 text-white [text-shadow:0_1px_5px_rgba(0,0,0,0.9)]">
+              <p className="break-words text-base font-extrabold leading-tight sm:text-2xl">
+                {vehicle.name.replace(/^DONGFENG\s*/i, "")}
+              </p>
+              <p className="mt-1 flex min-w-0 flex-wrap items-center gap-x-1 text-xs font-medium sm:text-base">
+                <span>{vehicle.engine}</span>
+                <span aria-hidden="true">·</span>
+                <span className="whitespace-nowrap">{vehicle.year}</span>
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={onModify}
+              className="col-start-3 shrink-0 rounded-full border border-white/80 bg-black/20 px-2 py-2 text-[10px] font-semibold text-white shadow-sm backdrop-blur-sm transition hover:bg-black/40 sm:px-4 sm:text-sm"
+            >
+              Modifier
+            </button>
+          </div>
+        </section>
+
         {(dataError || dataLoading) && (
-          <div className={`mb-4 rounded-2xl p-4 text-sm ${dataError ? "bg-amber-50 text-amber-900" : "bg-surface text-muted"}`} role="status">
+          <div className={`mt-4 rounded-2xl p-4 text-sm ${dataError ? "bg-amber-50 text-amber-900" : "bg-surface text-muted"}`} role="status">
             {dataError ? (
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <p>Disponibilité temporairement indisponible</p>
@@ -131,38 +172,19 @@ export default function PartsScreen({
           </div>
         )}
         {!modelParts.length && (
-          <p className="mb-4 rounded-2xl bg-surface p-4 text-sm text-muted" role="status">
+          <p className="mt-4 rounded-2xl bg-surface p-4 text-sm text-muted" role="status">
             Aucune pièce référencée pour ce modèle.
           </p>
         )}
-        <div className="grid gap-5 lg:grid-cols-[360px_minmax(0,1fr)] lg:gap-7">
-          <aside className="flex flex-col gap-4">
-            <VehicleCard vehicle={vehicle} onModify={onModify} />
-            <div className="flex h-12 items-center gap-2 rounded-2xl border border-line bg-surface px-4 transition focus-within:border-brand focus-within:bg-white focus-within:ring-4 focus-within:ring-brand/10">
-              <input
-                type="search"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="Rechercher une pièce…"
-                aria-label="Rechercher une pièce"
-                className="h-full min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-muted [&::-webkit-search-cancel-button]:hidden"
-              />
-              {query && <button type="button" aria-label="Effacer" onClick={() => setQuery("")} className="text-muted"><X className="h-4 w-4" /></button>}
-              <button type="button" aria-label="Scanner une pièce" onClick={startScan} className="flex h-8 w-8 items-center justify-center rounded-lg text-ink transition hover:bg-line/60 active:scale-90"><ScanLine className="h-5 w-5" /></button>
-            </div>
-            <div className="hidden rounded-2xl bg-surface p-4 text-sm leading-relaxed text-muted lg:block">
-              <strong className="block text-ink">Conseil</strong>
-              Recherchez par désignation, référence ou choisissez une catégorie pour filtrer rapidement le catalogue.
-            </div>
-          </aside>
-
-          <section className="min-w-0">
+        <section className="mt-6 min-w-0">
             {!showResults ? (
               <div>
-                <div className="mb-4">
-                  <p className="hidden text-xs font-extrabold uppercase tracking-[0.18em] text-brand lg:block">Pièces compatibles · {vehicle.name}</p>
-                  <h1 className="mt-1 text-[22px] font-extrabold lg:text-3xl">Catégories de pièces</h1>
-                  <p className="mt-1 text-sm text-muted">Choisissez une catégorie pour afficher les pièces de {vehicle.name}.</p>
+                <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
+                  <div>
+                    <p className="text-xs font-extrabold uppercase tracking-[0.14em] text-brand">Pièces compatibles · {vehicle.name}</p>
+                    <h1 className="mt-1 text-[22px] font-extrabold lg:text-3xl">Catégories de pièces</h1>
+                  </div>
+                  <span className="text-sm text-muted">{modelParts.length} pièce{modelParts.length > 1 ? "s" : ""}</span>
                 </div>
                 <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4">
                   {categories.map((c) => <CategoryCard key={c.id} category={c} selected={categoryId === c.id} onClick={() => setCategoryId(c.id)} />)}
@@ -172,7 +194,7 @@ export default function PartsScreen({
               <div className="anim-fade">
                 <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
                   <div>
-                    <p className="hidden text-xs font-extrabold uppercase tracking-[0.18em] text-brand lg:block">{vehicle.name} · Pièces compatibles</p>
+                    <p className="text-xs font-extrabold uppercase tracking-[0.14em] text-brand">{vehicle.name} · Pièces compatibles</p>
                     <h1 className="mt-1 text-[22px] font-extrabold lg:text-3xl">
                       {q ? "Résultats" : category?.label ?? "Pièces compatibles"}
                       {!loading && <span className="ml-2 text-sm font-medium text-muted">{results.length} pièce{results.length > 1 ? "s" : ""}</span>}
@@ -224,8 +246,7 @@ export default function PartsScreen({
                 )}
               </div>
             )}
-          </section>
-        </div>
+        </section>
       </main>
 
       {scanning && (

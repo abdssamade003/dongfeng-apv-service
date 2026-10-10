@@ -28,7 +28,7 @@ const VIN_RE = /^[A-HJ-NPR-Z0-9]{17}$/;
 
 function extractVinFromText(text: string): string | null {
   const rawLines = text.toUpperCase().split(/\r?\n/);
-  const cleanLine = (line: string) => line.replace(/[^A-Z0-9]/g, "");
+  const cleanLine = (line: string) => line.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^A-Z0-9]/g, "");
   const lines = rawLines.map(cleanLine);
   const findCandidates = (value: string) => {
     if (value.length < 17) return [];
@@ -37,20 +37,16 @@ function extractVinFromText(text: string): string | null {
       (_, index) => value.slice(index, index + 17),
     ).filter((candidate) => VIN_RE.test(candidate));
   };
-  const candidates = lines.flatMap(findCandidates);
   const chassisCandidates = rawLines.flatMap((line, index) => {
     const normalizedLine = cleanLine(line);
-    const label = /(?:CHASSIS|VIN)/.exec(normalizedLine);
+    const label = /(?:(?:NUMERO|NO|N)?(?:DU|DE)?CHASSIS|VIN)/.exec(normalizedLine);
     if (!label) return [];
     const valueAfterLabel = normalizedLine.slice(label.index + label[0].length);
     const followingLines = lines.slice(index + 1, index + 3);
     return findCandidates([valueAfterLabel, ...followingLines].join(""));
   });
 
-  return chassisCandidates[0]
-    ?? candidates.find((candidate) => detectVinModelPreview(candidate))
-    ?? candidates[0]
-    ?? null;
+  return chassisCandidates[0] ?? null;
 }
 
 export default function VehicleScreen({ initial, onBack, onSubmit, onNotify, onVinDetection }: Props) {
@@ -165,7 +161,7 @@ export default function VehicleScreen({ initial, onBack, onSubmit, onNotify, onV
 
       const scannedVin = extractVinFromText(text);
       if (!scannedVin) {
-        setError("VIN introuvable. Reprenez la photo en cadrant clairement la rubrique « N° du châssis ».");
+        setError("N° du châssis introuvable. Cadrez clairement son libellé et ses 17 caractères.");
         return;
       }
       setVin(scannedVin);
@@ -210,7 +206,7 @@ export default function VehicleScreen({ initial, onBack, onSubmit, onNotify, onV
             <div className="flex h-10 w-10 shrink-0 items-center justify-center"><Barcode className="h-7 w-7" strokeWidth={1.6} /></div>
             <div className="flex-1">
               <div className="mb-1 flex items-center justify-between">
-                <label htmlFor="vin" className="text-xs font-medium text-muted">Entrer le VIN</label>
+                <label htmlFor="vin" className="text-xs font-medium text-muted">Entrer le N° du châssis (VIN)</label>
                 <button type="button" aria-label="Où trouver mon VIN ?" onClick={() => setHelp((h) => !h)} className="text-muted transition hover:text-ink"><HelpCircle className="h-4 w-4" /></button>
               </div>
               <div className="relative">
@@ -231,7 +227,7 @@ export default function VehicleScreen({ initial, onBack, onSubmit, onNotify, onV
                   type="file"
                   accept="image/*"
                   capture="environment"
-                  aria-label="Photographier la carte grise pour lire le VIN"
+                  aria-label="Photographier la carte grise pour lire le N° du châssis"
                   onChange={scanVin}
                   className="sr-only"
                   tabIndex={-1}
@@ -263,7 +259,7 @@ export default function VehicleScreen({ initial, onBack, onSubmit, onNotify, onV
                 className="mt-3 flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-brand font-semibold text-brand transition hover:bg-brand-soft active:scale-[0.99] disabled:cursor-wait disabled:opacity-60"
               >
                 <ScanLine aria-hidden="true" className="h-5 w-5 text-brand" strokeWidth={2} />
-                {scanning ? "Lecture du VIN en cours…" : "Scanner le VIN"}
+                {scanning ? "Lecture du N° du châssis en cours…" : "Scanner le N° du châssis"}
               </button>
               {scanning && <p className="mt-2 text-center text-xs text-muted" role="status">La photo est analysée sur cet appareil.</p>}
               <div className="mt-1.5 flex items-start justify-between gap-2 text-xs">
@@ -296,9 +292,9 @@ export default function VehicleScreen({ initial, onBack, onSubmit, onNotify, onV
         </section>
       </main>
       {scanOpen && (
-        <Sheet title="Scanner le VIN" onClose={() => setScanOpen(false)} hideScrollbar>
+        <Sheet title="Scanner le N° du châssis" onClose={() => setScanOpen(false)} hideScrollbar>
           <p className="mb-4 text-sm text-muted">
-            Le « N° du châssis » comporte 17 caractères. Cadrez clairement cette rubrique sur votre carte grise.
+            Cadrez uniquement la rubrique « N° du châssis » (17 caractères) sur votre carte grise. Les autres numéros ne seront pas utilisés.
           </p>
           <div className="mt-5 flex flex-col gap-3">
             <PrimaryButton
