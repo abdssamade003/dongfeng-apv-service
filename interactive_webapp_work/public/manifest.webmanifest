@@ -1,0 +1,19 @@
+{
+  "name": "DONGFENG Service",
+  "short_name": "DONGFENG",
+  "description": "Recherche de pièces DONGFENG et disponibilité par agence.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#e30613",
+  "lang": "fr",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "/dongfeng-logo.png",
+      "sizes": "any",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}
