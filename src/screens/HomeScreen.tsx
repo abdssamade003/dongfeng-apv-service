@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { BadgeCheck, ExternalLink, MapPin, Settings, ShieldCheck, Star, Users, Wrench } from "lucide-react";
+import { BadgeCheck, Check, Copy, ExternalLink, MapPin, Settings, ShieldCheck, Star, Users, Wifi, Wrench } from "lucide-react";
 import Header from "../components/Header";
 import PrimaryButton from "../components/PrimaryButton";
 import Sheet from "../components/Sheet";
@@ -21,6 +21,7 @@ const reassurance = [
 ];
 
 const ratingLabels = ["Décevant", "Moyen", "Correct", "Très bien", "Excellent"];
+const wifiPassword = "L@*by_2025***";
 const googleReviewUrl = "https://g.page/r/CWHB6a_pUaSZECE/review";
 const showroomMapsUrl =
   "https://www.google.com/maps/place//@33.6134181,-7.5553639,17z/data=!3m1!4b1!4m3!3m2!1s0xda7cd001c61db17:0x99a451e9afe9c161!12e1?entry=ttu&g_ep=EgoyMDI2MTAwNi4wIKXMDSoASAFQAw%3D%3D";
@@ -122,6 +123,8 @@ function SearchReviewSheet({ onClose, onContinue }: { onClose: () => void; onCon
 export default function HomeScreen({ detectedVinModel, autoOpenRating, onCloseAutoRating, onSearch, onNotify }: Props) {
   const [rating, setRating] = useState(false);
   const [searchReview, setSearchReview] = useState(false);
+  const [showWifiPassword, setShowWifiPassword] = useState(false);
+  const [wifiPasswordCopied, setWifiPasswordCopied] = useState(false);
   const [vehicleIndex, setVehicleIndex] = useState(0);
   const detectedImage = detectedVinModel && detectedVinModel !== "unknown"
     ? MODEL_IMAGES[detectedVinModel]
@@ -131,6 +134,15 @@ export default function HomeScreen({ detectedVinModel, autoOpenRating, onCloseAu
       ? { id: detectedVinModel, name: `DONGFENG ${detectedVinModel}`, image: detectedImage }
       : vehicles[0]
     : vehicles[vehicleIndex];
+
+  const copyWifiPassword = async () => {
+    try {
+      await navigator.clipboard.writeText(wifiPassword);
+      setWifiPasswordCopied(true);
+    } catch {
+      onNotify("Impossible de copier le mot de passe. Vérifiez les autorisations du navigateur.");
+    }
+  };
 
   useEffect(() => {
     const interval = window.setInterval(() => {
@@ -181,6 +193,32 @@ export default function HomeScreen({ detectedVinModel, autoOpenRating, onCloseAu
             <PrimaryButton variant="outline" icon={<Settings className="h-5 w-5" />} chevron onClick={() => setSearchReview(true)}>
               Rechercher une pièce
             </PrimaryButton>
+            <PrimaryButton
+              variant="outline"
+              icon={<Wifi className="h-5 w-5" />}
+              chevron
+              aria-expanded={showWifiPassword}
+              onClick={() => {
+                setShowWifiPassword((visible) => !visible);
+                setWifiPasswordCopied(false);
+              }}
+            >
+              WiFi Visitors
+            </PrimaryButton>
+            {showWifiPassword && (
+              <button
+                type="button"
+                onClick={copyWifiPassword}
+                aria-label={wifiPasswordCopied ? "Mot de passe WiFi copié" : "Copier le mot de passe WiFi"}
+                className="flex w-full items-center justify-between gap-3 rounded-xl border border-line bg-surface px-4 py-3 text-left text-sm text-ink transition hover:bg-brand-soft focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand"
+              >
+                <span className="min-w-0 break-all font-mono">Mot de passe : {wifiPassword}</span>
+                <span className="flex shrink-0 items-center gap-1.5 font-sans text-xs font-semibold text-muted">
+                  {wifiPasswordCopied ? <Check className="h-4 w-4 text-emerald-700" /> : <Copy className="h-4 w-4" />}
+                  {wifiPasswordCopied ? "Copié" : "Copier"}
+                </span>
+              </button>
+            )}
           </div>
 
           <ul className="mt-8 grid grid-cols-3 gap-3 border-t border-line pt-6 lg:mt-10 lg:gap-5">
@@ -191,6 +229,7 @@ export default function HomeScreen({ detectedVinModel, autoOpenRating, onCloseAu
               </li>
             ))}
           </ul>
+
         </section>
       </main>
 

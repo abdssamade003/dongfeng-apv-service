@@ -10,6 +10,7 @@ interface Props {
   chevron?: boolean;
   loading?: boolean;
   disabled?: boolean;
+  "aria-expanded"?: boolean;
   href?: string;
   external?: boolean;
   onClick?: () => void;
@@ -32,6 +33,7 @@ export default function PrimaryButton({
   chevron = false,
   loading = false,
   disabled = false,
+  "aria-expanded": ariaExpanded,
   href,
   external,
   onClick,
@@ -66,7 +68,13 @@ export default function PrimaryButton({
   }
 
   return (
-    <button type="button" className={cls} onClick={onClick} disabled={disabled || loading}>
+    <button
+      type="button"
+      className={cls}
+      onClick={onClick}
+      disabled={disabled || loading}
+      aria-expanded={ariaExpanded}
+    >
       {content}
     </button>
   );

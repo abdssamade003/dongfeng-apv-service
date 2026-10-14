@@ -9,6 +9,8 @@ Responsive React + Vite web application converted from the original mobile proto
 - Mobile flow preserved.
 - Responsive home, vehicle identification, parts catalogue, product stock and contact screens.
 - Desktop modal behavior for rating/contact/scanner sheets.
+- VIN scanning with PaddleOCR PP-OCRv6, single-orientation processing, and targeted extraction from the chassis-number row.
+  OCR models and dictionary are fetched lazily from pinned public Hugging Face files; uploaded images are processed locally in the browser.
 - Web app metadata and manifest.
 - Docker + Nginx production deployment files.
 - `/health` endpoint in the Nginx container.

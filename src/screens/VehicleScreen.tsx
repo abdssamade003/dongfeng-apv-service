@@ -225,10 +225,11 @@ export default function VehicleScreen({ initial, onBack, onSubmit, onNotify, onV
                 type="button"
                 onClick={() => setScanOpen(true)}
                 disabled={scanning}
-                className="mt-3 flex h-11 w-full items-center justify-center gap-2 rounded-xl border border-brand font-semibold text-brand transition hover:bg-brand-soft active:scale-[0.99] disabled:cursor-wait disabled:opacity-60"
+                aria-live="polite"
+                className="mt-3 flex h-11 w-full items-center justify-center gap-2 whitespace-nowrap rounded-xl border border-brand px-3 text-sm font-semibold leading-none text-brand transition hover:bg-brand-soft active:scale-[0.99] disabled:cursor-wait disabled:opacity-60"
               >
                 <ScanLine aria-hidden="true" className="h-5 w-5 text-brand" strokeWidth={2} />
-                {scanning ? "Analyse en cours..." : "Scanner le N° du châssis"}
+                <span>{scanning ? "Analyse du VIN..." : "Scanner et analyser le VIN"}</span>
               </button>
               <div className="mt-1.5 flex items-start justify-between gap-2 text-xs">
                 {error ? (
@@ -262,7 +263,7 @@ export default function VehicleScreen({ initial, onBack, onSubmit, onNotify, onV
       {scanOpen && (
         <Sheet title="Scanner le N° du châssis" onClose={() => setScanOpen(false)} hideScrollbar>
           <p className="mb-4 text-sm text-muted">
-            Cadrez uniquement la rubrique « N° du châssis » (17 caractères) sur votre carte grise. Les autres numéros ne seront pas utilisés.
+            Cadrez uniquement la ligne « N° du châssis » et ses 17 caractères. Le scan traite une seule image et cible cette rubrique.
           </p>
           <div className="mt-5 flex flex-col gap-3">
             <PrimaryButton
